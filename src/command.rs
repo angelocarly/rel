@@ -19,7 +19,7 @@ pub async fn edit_node(note: &Note) -> Note {
     // Create a directory inside of `std::env::temp_dir()`.
     let dir = tempdir().unwrap();
 
-    let file_path = dir.path().join("note");
+    let file_path = dir.path().join("note.md");
     let mut file = File::create(file_path.clone()).unwrap();
 
     // Write node data
