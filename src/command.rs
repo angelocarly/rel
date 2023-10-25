@@ -12,10 +12,10 @@ use crate::database;
 #[derive(Clone)]
 pub struct Note {
     pub title: String,
-    text: String,
+    pub(crate) text: String,
 }
 
-pub async fn edit_node(note: &Note) {
+pub async fn edit_node(note: &Note) -> Note {
     // Create a directory inside of `std::env::temp_dir()`.
     let dir = tempdir().unwrap();
 
@@ -31,14 +31,14 @@ pub async fn edit_node(note: &Note) {
     let data = fs::read_to_string(file_path).expect("Failed to read file");
     println!("{}", data);
 
-    let new_note = Note {
+    drop(file);
+    dir.close().expect("Failed to close directory");
+
+    return Note {
         title: note.clone().title,
         text: data
     };
-    update_note(&new_note).await;
 
-    drop(file);
-    dir.close().expect("Failed to close directory");
 }
 
 pub async fn poll_nodes() -> Vec<Note> {
@@ -62,20 +62,6 @@ pub async fn poll_nodes() -> Vec<Note> {
         }
         return notes;
     }).await.expect("Tokio panicked");
-}
-
-pub async fn update_note(note: &Note){
-
-    let db = database::Database::new();
-    let graph = db.graph();
-
-    let mut result = graph.await.execute(
-        query( "MATCH (n:Note {title: $title}) SET n.text = $text RETURN n")
-            .param("title", note.title.as_str())
-            .param("text", note.text.as_str())
-    ).await.unwrap();
-
-    result.next().await.unwrap().unwrap();
 }
 
 pub fn vim(path: &str) {
