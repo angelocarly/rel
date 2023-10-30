@@ -64,10 +64,15 @@ pub async fn poll_nodes() -> Vec<Note> {
     }).await.expect("Tokio panicked");
 }
 
+fn get_editor() -> String {
+    let editor = std::env::var("EDITOR").expect("No EDITOR provided");
+    return editor;
+}
+
 pub fn vim(path: &str) {
     std::process::Command::new("/bin/sh")
         .arg("-c")
-        .arg(format!("/opt/homebrew/bin/nvim {}", path))
+        .arg(format!("{} {}", get_editor(), path))
         .spawn()
         .expect("Error: Failed to run editor")
         .wait()
